@@ -33,15 +33,57 @@
 using namespace std;
 using namespace opendnp3;
 
-DatabaseConfig ConfigureDatabase()
+DatabaseConfig ConfigureDatabase(uint16_t count)
 {
-    DatabaseConfig config(10); // 10 of each type with default settings
+   /* DatabaseConfig config(10); // 10 of each type with default settings
 
     config.analog_input[0].clazz = PointClass::Class2;
     config.analog_input[0].svariation = StaticAnalogVariation::Group30Var5;
-    config.analog_input[0].evariation = EventAnalogVariation::Group32Var7;
-            
+    config.analog_input[0].evariation = EventAnalogVariation::Group32Var7;*/
+
+
+     opendnp3::DatabaseConfig config;
+
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.binary_input[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.double_binary[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.analog_input[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.counter[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.frozen_counter[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.binary_output_status[i] = {};
+    }
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        config.analog_output_status[i] = {};
+    }
+    for (uint16_t i = 0; i < 0; ++i)
+    {
+        config.time_and_interval[i] = {};
+    }
+    for (uint16_t i = 0; i < 0; ++i)
+    {
+        config.octet_string[i] = {};
+    }
+
     return config;
+            
+   // return config;
 }
 
 struct State
@@ -84,31 +126,38 @@ int main(int argc, char* argv[])
 
     // The main object for a outstation. The defaults are useable,
     // but understanding the options are important.
-    OutstationStackConfig config(ConfigureDatabase());
+    OutstationStackConfig config1(ConfigureDatabase(10));
+    OutstationStackConfig config2(ConfigureDatabase(20));
 
     // Specify the maximum size of the event buffers
-    config.outstation.eventBufferConfig = EventBufferConfig::AllTypes(100);
-
+    config1.outstation.eventBufferConfig = EventBufferConfig::AllTypes(100);
+    config2.outstation.eventBufferConfig = EventBufferConfig::AllTypes(100);
     // you can override an default outstation parameters here
     // in this example, we've enabled the oustation to use unsolicted reporting
     // if the master enables it
-    config.outstation.params.allowUnsolicited = true;
-
+    config1.outstation.params.allowUnsolicited = true;
+    config2.outstation.params.allowUnsolicited = true;
     // You can override the default link layer settings here
     // in this example we've changed the default link layer addressing
-    config.link.LocalAddr = 10;
-    config.link.RemoteAddr = 1;
-    config.link.KeepAliveTimeout = TimeDuration::Max();
+    config1.link.LocalAddr = 10;
+    config1.link.RemoteAddr = 1;
+    config1.link.KeepAliveTimeout = TimeDuration::Max();
 
+
+    config2.link.LocalAddr = 11;
+    config2.link.RemoteAddr = 1;
+    config2.link.KeepAliveTimeout = TimeDuration::Max();
     // Create a new outstation with a log level, command handler, and
     // config info this	returns a thread-safe interface used for
     // updating the outstation's database.
-    auto outstation = channel->AddOutstation("outstation", SuccessCommandHandler::Create(),
-                                             app, config);
+    auto outstation1 = channel->AddOutstation("outstation1", SuccessCommandHandler::Create(),
+                                             app, config1);
+    auto outstation2 = channel->AddOutstation("outstation2", SuccessCommandHandler::Create(),
+                                             app, config2);
 
     // Enable the outstation and start communications
-    outstation->Enable();
-
+    outstation1->Enable();
+    outstation2->Enable();
     // variables used in example loop
     string input;
     State state;
@@ -126,7 +175,7 @@ int main(int argc, char* argv[])
             // update measurement values based on input string
             UpdateBuilder builder;
             AddUpdates(builder, state, input);
-            outstation->Apply(builder.Build());
+            outstation1->Apply(builder.Build());
         }
     }
 
